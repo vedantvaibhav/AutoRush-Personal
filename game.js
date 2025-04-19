@@ -1,8 +1,8 @@
 // Game constants
 const BASE_CANVAS_WIDTH = 900;
 const BASE_CANVAS_HEIGHT = 500;
-const GRAVITY = 1.2;                     // Reduced gravity for smoother falling
-const SLIDE_FORCE = -3.5;                // Reduced upward force for smoother gliding
+const GRAVITY = 1.4;                     // Reduced gravity for slightly slower descent
+const SLIDE_FORCE = -4.0;                // Keep current upward force
 const BASE_OBSTACLE_WIDTH = 70;
 const BASE_OBSTACLE_HEIGHT = 80;
 const OBSTACLE_SPEED = 5.0;              // Keep current obstacle speed
@@ -11,7 +11,7 @@ const MIN_OBSTACLE_DISTANCE = 250;       // Keep current distance
 const CORNER_PADDING = 40;
 const MAX_PARTICLES = 25;
 const PARTICLE_LIFETIME = 40;
-const SMOOTH_ACCELERATION = 0.12;        // Reduced for smoother gliding
+const SMOOTH_ACCELERATION = 0.08;        // Keep current smooth acceleration
 
 // Vehicle-specific dimensions
 const VEHICLE_DIMENSIONS = {
@@ -318,13 +318,13 @@ class Particle {
 function update() {
     if (gameOver || isPaused) return;
 
-    // Update player with smoother gliding movement
+    // Update player with smoother upward movement
     if (player.isSliding) {
-        // Very smooth upward acceleration for gliding feel
+        // Very smooth upward acceleration
         player.velocityY = Math.max(player.velocityY - SMOOTH_ACCELERATION, SLIDE_FORCE);
         
-        // Gradual rotation for smooth gliding
-        player.rotation = Math.max(player.rotation - 0.8, -15);
+        // Gradual rotation for smooth movement
+        player.rotation = Math.max(player.rotation - 0.6, -15);
         
         // Continuous smoke generation while spacebar is pressed
         if (particles.length < MAX_PARTICLES) {
@@ -333,9 +333,9 @@ function update() {
             }
         }
     } else {
-        // Smooth falling with reduced gravity
-        player.velocityY = Math.min(player.velocityY + GRAVITY, 1.5);
-        player.rotation = Math.min(player.rotation + 0.8, 0);
+        // Slightly slower falling with reduced gravity
+        player.velocityY = Math.min(player.velocityY + GRAVITY, 1.8);
+        player.rotation = Math.min(player.rotation + 0.6, 0);
         
         // Minimal smoke when falling
         if (particles.length < MAX_PARTICLES && Math.random() > 0.9) {

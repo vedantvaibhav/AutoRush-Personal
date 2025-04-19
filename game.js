@@ -520,11 +520,26 @@ function draw() {
 
     // Draw pause screen
     if (isPaused && !gameOver) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        // Add semi-transparent overlay
+        ctx.fillStyle = 'rgba(142, 212, 160, 0.7)';
         ctx.fillRect(0, 0, BASE_CANVAS_WIDTH, BASE_CANVAS_HEIGHT);
+        
+        // Draw pause text
         ctx.fillStyle = '#225D31';
-        ctx.font = '48px Neulis';
-        ctx.fillText('Paused', BASE_CANVAS_WIDTH/2 - 80, BASE_CANVAS_HEIGHT/2);
+        ctx.font = '36px Neulis';
+        const pauseText = 'Paused';
+        const textMetrics = ctx.measureText(pauseText);
+        const x = (BASE_CANVAS_WIDTH - textMetrics.width) / 2;
+        const y = BASE_CANVAS_HEIGHT / 2 - 20;
+        ctx.fillText(pauseText, x, y);
+
+        // Draw secondary text with specified styling
+        ctx.fillStyle = '#225D31';
+        ctx.font = '500 18px Quicksand';
+        const secondaryText = 'press P to resume';
+        const secondaryMetrics = ctx.measureText(secondaryText);
+        const secondaryX = (BASE_CANVAS_WIDTH - secondaryMetrics.width) / 2;
+        ctx.fillText(secondaryText, secondaryX, y + 40);
     }
 }
 

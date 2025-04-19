@@ -1,17 +1,22 @@
 // Game constants
 const BASE_CANVAS_WIDTH = 900;
 const BASE_CANVAS_HEIGHT = 500;
-const GRAVITY = 1.4;                     // Reduced gravity for slightly slower descent
-const SLIDE_FORCE = -4.0;                // Keep current upward force
-const BASE_OBSTACLE_WIDTH = 70;
-const BASE_OBSTACLE_HEIGHT = 80;
-const OBSTACLE_SPEED = 5.0;              // Keep current obstacle speed
-const OBSTACLE_GAP = 350;                // Keep current gap
-const MIN_OBSTACLE_DISTANCE = 250;       // Keep current distance
+const GRAVITY = 0.2;                     // Keep current gravity
+const SLIDE_FORCE = -4.5;                // Keep current upward force
+const BASE_OBSTACLE_WIDTH = 60;          // Reduced obstacle width
+const BASE_OBSTACLE_HEIGHT = 70;         // Reduced obstacle height
+const OBSTACLE_SPEED = 3.5;              // Increased obstacle speed
+const OBSTACLE_GAP = 400;                // Keep current gap
+const MIN_OBSTACLE_DISTANCE = 300;       // Keep current distance
 const CORNER_PADDING = 40;
 const MAX_PARTICLES = 25;
 const PARTICLE_LIFETIME = 40;
-const SMOOTH_ACCELERATION = 0.08;        // Keep current smooth acceleration
+const SMOOTH_ACCELERATION = 0.15;        // Keep current smooth acceleration
+
+// New settings
+const SLOPE_ANGLE = 15;                  // Maximum tilt angle
+const MOVEMENT_SPEED = 1.0;              // Reduced base movement speed
+const TREE_GENERATION_INTERVAL = 120;    // Time between tree generation
 
 // Vehicle-specific dimensions
 const VEHICLE_DIMENSIONS = {
@@ -318,13 +323,13 @@ class Particle {
 function update() {
     if (gameOver || isPaused) return;
 
-    // Update player with smoother upward movement
+    // Update player with more responsive upward movement
     if (player.isSliding) {
-        // Very smooth upward acceleration
+        // Faster upward acceleration
         player.velocityY = Math.max(player.velocityY - SMOOTH_ACCELERATION, SLIDE_FORCE);
         
-        // Gradual rotation for smooth movement
-        player.rotation = Math.max(player.rotation - 0.6, -15);
+        // Quicker rotation for responsive feel
+        player.rotation = Math.max(player.rotation - 0.8, -15);
         
         // Continuous smoke generation while spacebar is pressed
         if (particles.length < MAX_PARTICLES) {
@@ -333,7 +338,7 @@ function update() {
             }
         }
     } else {
-        // Slightly slower falling with reduced gravity
+        // Keep current falling speed
         player.velocityY = Math.min(player.velocityY + GRAVITY, 1.8);
         player.rotation = Math.min(player.rotation + 0.6, 0);
         

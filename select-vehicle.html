@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Rush - Select Vehicle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Neulis&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #BEE0C7;
+            overflow: hidden;
+        }
+        .title {
+            color: #225D31;
+            text-align: center;
+            font-family: 'Neulis', sans-serif;
+            font-size: 36px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            margin: 0;
+        }
+        .subtitle {
+            color: #225D31;
+            text-align: center;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+            margin: 8px 0 0 0;
+        }
+        .selection-container {
+            width: 900px;
+            padding: 32px;
+            margin-top: 24px;
+        }
+        .vehicles-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            padding: 16px 0;
+        }
+        .vehicle-option {
+            background: #8ED4A0;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            padding: 16px 16px 16px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 140px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .vehicle-option:hover {
+            border-color: #225D31;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(34, 93, 49, 0.1);
+        }
+        .vehicle-option.selected {
+            border-color: #225D31;
+            background: #A8D4B4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 93, 49, 0.15);
+        }
+        .vehicle-image {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .vehicle-option img {
+            width: 100%;
+            height: auto;
+            max-height: 80px;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+        }
+        .vehicle-option:hover img {
+            transform: scale(1.05);
+        }
+        .vehicle-name {
+            color: #225D31;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            position: absolute;
+            bottom: 16px;
+            left: 0;
+            right: 0;
+            padding: 0 8px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 32px;
+        }
+        .button {
+            border: 2px solid #225D31;
+            border-radius: 4px;
+            height: 36px;
+            min-height: 36px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 24px;
+            color: #225D31;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            background: transparent;
+            min-width: 100px;
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+        .button.primary {
+            background: #225D31;
+            color: white;
+        }
+        .button:hover {
+            background: #225D31;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(34, 93, 49, 0.15);
+        }
+        .vehicle-lock-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+        .vehicle-lock-icon {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+        .vehicle-option.locked {
+            cursor: not-allowed;
+        }
+        .vehicle-option.locked:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">Auto Rush</h1>
+    <p class="subtitle" id="subtitleText">Select your ride and click play to start</p>
+    <div class="selection-container">
+        <div class="vehicles-grid" id="vehiclesGrid">
+            <!-- Vehicle options will be populated by JavaScript -->
+        </div>
+        <div class="button-container">
+            <a href="index.html" class="button">Back</a>
+            <button class="button primary" id="playButton">Play</button>
+        </div>
+    </div>
+
+    <svg style="display: none;">
+        <symbol id="lock-icon" viewBox="0 0 24 24">
+            <path d="M12 1C8.67619 1 6 3.67619 6 7V9H4C2.89543 9 2 9.89543 2 11V21C2 22.1046 2.89543 23 4 23H20C21.1046 23 22 22.1046 22 21V11C22 9.89543 21.1046 9 20 9H18V7C18 3.67619 15.3238 1 12 1ZM12 3C14.2772 3 16 4.72284 16 7V9H8V7C8 4.72284 9.72284 3 12 3ZM4 11H20V21H4V11Z"/>
+        </symbol>
+    </svg>
+
+    <script>
+        // Available vehicles (must match game.js)
+        const validVehicles = [
+            { id: 'Auto 1', name: 'Classic Auto', unlocked: true },
+            { id: 'Vehicle01', name: 'SUV', unlocked: false },
+            { id: 'Vehicle02', name: 'Sedan', unlocked: false },
+            { id: 'Vehicle09', name: 'Race Car', unlocked: false },
+            { id: 'Vehicle06', name: 'Sports Car', unlocked: false },
+            { id: 'Vehicle05', name: 'Truck', unlocked: false },
+            { id: 'Vehicle12', name: 'Bus', unlocked: false },
+            { id: 'Vehicle13', name: 'Vintage Car', unlocked: false }
+        ];
+
+        // Get selected vehicle with validation
+        let selectedVehicle = localStorage.getItem('selectedVehicle');
+        const allVehiclesUnlocked = localStorage.getItem('allVehiclesUnlocked') === 'true';
+
+        // Update subtitle text based on unlock status
+        const subtitleText = document.getElementById('subtitleText');
+        if (!allVehiclesUnlocked) {
+            subtitleText.textContent = 'Score more than 100 to unlock all vehicles';
+        }
+
+        // Update vehicle unlock status
+        if (allVehiclesUnlocked) {
+            validVehicles.forEach(vehicle => vehicle.unlocked = true);
+            subtitleText.textContent = 'Select your ride and click play to start';
+        }
+
+        if (!selectedVehicle || !validVehicles.some(v => v.id === selectedVehicle && v.unlocked)) {
+            selectedVehicle = 'Auto 1'; // Default to Classic Auto
+            localStorage.setItem('selectedVehicle', selectedVehicle);
+        }
+
+        // Create vehicle options
+        const vehiclesGrid = document.getElementById('vehiclesGrid');
+
+        validVehicles.forEach(vehicle => {
+            const option = document.createElement('div');
+            option.className = 'vehicle-option' + 
+                (vehicle.id === selectedVehicle ? ' selected' : '') +
+                (!vehicle.unlocked ? ' locked' : '');
+
+            // Create and load image with error handling
+            const img = new Image();
+            img.src = `assets/${encodeURIComponent(vehicle.id)}.svg`;
+            img.alt = vehicle.name;
+            img.onerror = function() {
+                console.error('Failed to load vehicle image:', vehicle.id);
+                if (vehicle.id === selectedVehicle) {
+                    selectedVehicle = 'Auto 1';
+                    localStorage.setItem('selectedVehicle', selectedVehicle);
+                }
+            };
+
+            const vehicleContainer = document.createElement('div');
+            vehicleContainer.className = 'vehicle-image';
+            vehicleContainer.appendChild(img);
+
+            option.innerHTML = `
+                <div class="vehicle-image"></div>
+                <span class="vehicle-name">${vehicle.name}</span>
+            `;
+            option.querySelector('.vehicle-image').appendChild(img);
+
+            if (!vehicle.unlocked) {
+                const lockOverlay = document.createElement('div');
+                lockOverlay.className = 'vehicle-lock-overlay';
+                lockOverlay.innerHTML = `
+                    <svg class="vehicle-lock-icon">
+                        <use href="#lock-icon"></use>
+                    </svg>
+                `;
+                option.appendChild(lockOverlay);
+            }
+
+            if (vehicle.unlocked) {
+                option.addEventListener('click', () => {
+                    // Remove selected class from all options
+                    document.querySelectorAll('.vehicle-option').forEach(opt => opt.classList.remove('selected'));
+                    // Add selected class to clicked option
+                    option.classList.add('selected');
+                    // Update selected vehicle
+                    selectedVehicle = vehicle.id;
+                    localStorage.setItem('selectedVehicle', selectedVehicle);
+                });
+            }
+
+            vehiclesGrid.appendChild(option);
+        });
+
+        // Play button handler
+        document.getElementById('playButton').addEventListener('click', () => {
+            // Ensure we have a valid vehicle selected before starting
+            if (!validVehicles.some(v => v.id === selectedVehicle && v.unlocked)) {
+                selectedVehicle = 'Auto 1';
+                localStorage.setItem('selectedVehicle', selectedVehicle);
+            }
+            // Redirect to index.html with start parameter
+            window.location.href = 'index.html?start=true';
+        });
+    </script>
+</body>
+</html> 

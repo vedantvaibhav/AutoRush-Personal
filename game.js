@@ -21,7 +21,7 @@ const TARGET_FPS = 60;                   // Target frames per second
 const FRAME_TIME = 1000 / TARGET_FPS;    // Target time per frame in milliseconds
 
 // New settings
-const SLOPE_ANGLE = 15;                  // Keep current tilt angle
+const SLOPE_ANGLE = 0;                  // Keep current tilt angle
 const BASE_MOVEMENT_SPEED = 1.5;         // Reduced base movement speed (was 2)
 const TREE_GENERATION_INTERVAL = 10;    // Keep current tree generation interval
 
@@ -138,20 +138,25 @@ function resizeCanvas() {
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
     
-    // Set canvas size to match container but with higher resolution for sharper rendering
-    canvas.width = BASE_CANVAS_WIDTH * 2;  // Double the resolution
-    canvas.height = BASE_CANVAS_HEIGHT * 2;
+    // Calculate the scale factor while maintaining aspect ratio
+    const scaleX = containerWidth / BASE_CANVAS_WIDTH;
+    const scaleY = containerHeight / BASE_CANVAS_HEIGHT;
+    const scale = Math.min(scaleX, scaleY);
+    
+    // Set canvas size to match container while maintaining aspect ratio
+    canvas.width = BASE_CANVAS_WIDTH;
+    canvas.height = BASE_CANVAS_HEIGHT;
     
     // Scale the canvas display size
-    canvas.style.width = `${containerWidth}px`;
-    canvas.style.height = `${containerHeight}px`;
+    canvas.style.width = `${BASE_CANVAS_WIDTH * scale}px`;
+    canvas.style.height = `${BASE_CANVAS_HEIGHT * scale}px`;
     
     // Update scale for game calculations
-    scale = containerWidth / BASE_CANVAS_WIDTH;
+    scale = scale;
     
     // Scale the context to match the high resolution
     ctx.resetTransform();  // Reset any previous transforms
-    ctx.scale(2, 2);
+    ctx.scale(1, 1);
     
     // Reset image smoothing after resize
     ctx.imageSmoothingEnabled = true;
@@ -276,6 +281,7 @@ function togglePause() {
 
 // Handle window resize
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', resizeCanvas);
 resizeCanvas(); // Initial resize
 
 // Game functions

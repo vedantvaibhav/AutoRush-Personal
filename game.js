@@ -6,7 +6,7 @@ const SLIDE_FORCE = -10;                // Keep current upward force
 const BASE_DOWNWARD_SLIDE_FORCE = 0.5;  // Base downward slide force
 const BASE_OBSTACLE_WIDTH = 60;          // Keep current obstacle width
 const BASE_OBSTACLE_HEIGHT = 70;         // Keep current obstacle height
-const BASE_OBSTACLE_SPEED = 11;          // Base obstacle speed
+const BASE_OBSTACLE_SPEED = 8;           // Reduced base obstacle speed (was 11)
 const BASE_OBSTACLE_GAP = 350;           // Base gap between obstacles
 const BASE_MIN_OBSTACLE_DISTANCE = 250;  // Base minimum distance
 const CORNER_PADDING = 40;
@@ -17,11 +17,17 @@ const MAX_ROTATION = 5;                  // Keep current maximum rotation angle
 const ROTATION_SPEED = 0.3;              // Keep current base rotation speed
 const UPWARD_ROTATION_SPEED = 0.8;       // Previous upward rotation speed
 const UPWARD_MAX_ROTATION = 15;          // Previous upward maximum rotation
+const TARGET_FPS = 60;                   // Target frames per second
+const FRAME_TIME = 1000 / TARGET_FPS;    // Target time per frame in milliseconds
 
 // New settings
 const SLOPE_ANGLE = 15;                  // Keep current tilt angle
-const BASE_MOVEMENT_SPEED =8;           // Base movement speed
+const BASE_MOVEMENT_SPEED = 1.5;         // Reduced base movement speed (was 2)
 const TREE_GENERATION_INTERVAL = 10;    // Keep current tree generation interval
+
+// Speed limits
+const MAX_SPEED_MULTIPLIER = 2.0;        // Maximum speed multiplier
+const MAX_DIFFICULTY_MULTIPLIER = 2.0;   // Maximum difficulty multiplier
 
 // Vehicle-specific dimensions
 const VEHICLE_DIMENSIONS = {
@@ -373,14 +379,16 @@ class Particle {
 function update() {
     if (gameOver || isPaused) return;
 
-    // Calculate speed multiplier based on score
-    const speedMultiplier = 1 + (Math.floor(score / 25) * 0.1);
+    // Calculate speed multiplier based on score with maximum limit
+    const rawSpeedMultiplier = 1 + (Math.floor(score / 25) * 0.1);
+    const speedMultiplier = Math.min(rawSpeedMultiplier, MAX_SPEED_MULTIPLIER);
     const currentObstacleSpeed = BASE_OBSTACLE_SPEED * speedMultiplier;
     const currentMovementSpeed = BASE_MOVEMENT_SPEED * speedMultiplier;
     const currentDownwardSlideForce = BASE_DOWNWARD_SLIDE_FORCE * speedMultiplier;
 
-    // Calculate difficulty multiplier based on score
-    const difficultyMultiplier = 1 + (Math.floor(score / 40) * 0.15);
+    // Calculate difficulty multiplier based on score with maximum limit
+    const rawDifficultyMultiplier = 1 + (Math.floor(score / 40) * 0.15);
+    const difficultyMultiplier = Math.min(rawDifficultyMultiplier, MAX_DIFFICULTY_MULTIPLIER);
     const currentObstacleGap = BASE_OBSTACLE_GAP / difficultyMultiplier;
     const currentMinDistance = BASE_MIN_OBSTACLE_DISTANCE * difficultyMultiplier;
 
@@ -656,14 +664,39 @@ function startGame() {
 }
 
 // Game loop
-function gameLoop() {
-    update();
+let lastTime = 0;
+let accumulatedTime = 0;
+
+function gameLoop(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    
+    // Calculate time delta
+    const deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
+    
+    // Accumulate time
+    accumulatedTime += deltaTime;
+    
+    // Only update if enough time has passed
+    if (accumulatedTime >= FRAME_TIME) {
+        // Calculate how many frames to update
+        const framesToUpdate = Math.floor(accumulatedTime / FRAME_TIME);
+        accumulatedTime %= FRAME_TIME;
+        
+        // Update game state for each frame
+        for (let i = 0; i < framesToUpdate; i++) {
+            update();
+        }
+    }
+    
+    // Always draw
     draw();
+    
     requestAnimationFrame(gameLoop);
 }
 
 // Start the game
-gameLoop();
+requestAnimationFrame(gameLoop);
 
 // Toast notification function
 function showToast(message) {

@@ -31,14 +31,14 @@ const MAX_DIFFICULTY_MULTIPLIER = 2.0;   // Maximum difficulty multiplier
 
 // Vehicle-specific dimensions
 const VEHICLE_DIMENSIONS = {
-    'Auto 1': { width: 90, height: 60 },      // Classic Auto
-    'Vehicle01': { width: 118, height: 53 },  // SUV
-    'Vehicle02': { width: 112, height: 36 },  // Sedan
-    'Vehicle09': { width: 119, height: 38 },  // Race Car
-    'Vehicle06': { width: 114, height: 37 },  // Sports Car
-    'Vehicle05': { width: 112, height: 51 },  // Truck
-    'Vehicle12': { width: 113, height: 64 },  // Bus
-    'Vehicle13': { width: 143, height: 63 }   // Vintage Car
+    'Auto 1': { width: 90 * 0.75, height: 60 * 0.75 },      // Classic Auto
+    'Vehicle01': { width: 118 * 0.75, height: 53 * 0.75 },  // SUV
+    'Vehicle02': { width: 112 * 0.75, height: 36 * 0.75 },  // Sedan
+    'Vehicle09': { width: 119 * 0.75, height: 38 * 0.75 },  // Race Car
+    'Vehicle06': { width: 114 * 0.75, height: 37 * 0.75 },  // Sports Car
+    'Vehicle05': { width: 112 * 0.75, height: 51 * 0.75 },  // Truck
+    'Vehicle12': { width: 113 * 0.75, height: 64 * 0.75 },  // Bus
+    'Vehicle13': { width: 143 * 0.75, height: 63 * 0.75 }   // Vintage Car
 };
 
 // Check URL parameters for start flag
@@ -107,7 +107,7 @@ for (let i = 1; i <= 4; i++) {
 
 // Game state
 let player = {
-    x: 100,
+    x: window.innerWidth <= 768 ? 300 : 30, // 300 for mobile, 150 for desktop
     y: BASE_CANVAS_HEIGHT / 2,
     velocityY: 0,
     width: VEHICLE_DIMENSIONS[selectedVehicle].width,
@@ -121,6 +121,12 @@ let lastObstacleX = BASE_CANVAS_WIDTH;
 let lastObstaclePosition = null;  // Track last obstacle position
 let scale = 1; // Scale factor for responsive design
 let particles = [];
+
+// Add viewport offset for mobile
+let viewportOffset = {
+    x: 0,
+    y: 0
+};
 
 // Canvas setup
 const canvas = document.getElementById('gameCanvas');
@@ -137,17 +143,36 @@ function resizeCanvas() {
     const container = document.getElementById('gameContainer');
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
+    const isMobile = window.innerWidth <= 768;
+    
+    // Calculate the scale that maintains aspect ratio
+    const scaleX = containerWidth / BASE_CANVAS_WIDTH;
+    const scaleY = containerHeight / BASE_CANVAS_HEIGHT;
+    
+    // For mobile, use a smaller scale to make assets smaller
+    if (isMobile) {
+        scale = Math.min(scaleX, scaleY) * 0.75; // 25% smaller on mobile
+    } else {
+        scale = Math.min(scaleX, scaleY);
+    }
+    
+    // Calculate the new canvas dimensions that maintain aspect ratio
+    const newWidth = BASE_CANVAS_WIDTH * scale;
+    const newHeight = BASE_CANVAS_HEIGHT * scale;
     
     // Set canvas size to match container but with higher resolution for sharper rendering
     canvas.width = BASE_CANVAS_WIDTH * 2;  // Double the resolution
     canvas.height = BASE_CANVAS_HEIGHT * 2;
     
-    // Scale the canvas display size
-    canvas.style.width = `${containerWidth}px`;
+    // Scale the canvas display size to fill the container height
+    canvas.style.width = `${containerHeight * (BASE_CANVAS_WIDTH / BASE_CANVAS_HEIGHT)}px`;
     canvas.style.height = `${containerHeight}px`;
     
-    // Update scale for game calculations
-    scale = containerWidth / BASE_CANVAS_WIDTH;
+    // Center the canvas in the container
+    canvas.style.margin = 'auto';
+    canvas.style.position = 'absolute';
+    canvas.style.left = '50%';
+    canvas.style.transform = 'translateX(-50%)';
     
     // Scale the context to match the high resolution
     ctx.resetTransform();  // Reset any previous transforms
@@ -280,6 +305,7 @@ resizeCanvas(); // Initial resize
 
 // Game functions
 function createObstacle() {
+    const isMobile = window.innerWidth <= 768;
     // Calculate randomness multiplier based on score
     const randomnessMultiplier = 1 + (Math.floor(score / 30) * 0.2);
     
@@ -298,7 +324,8 @@ function createObstacle() {
     
     // Add random variation to position
     const position = availablePositions[Math.floor(Math.random() * availablePositions.length)];
-    const randomYVariation = (Math.random() - 0.5) * 50 * randomnessMultiplier;
+    // Increase vertical variation on mobile
+    const randomYVariation = (Math.random() - 0.5) * (isMobile ? 80 : 50) * randomnessMultiplier;
     const finalY = Math.max(
         CORNER_PADDING,
         Math.min(
@@ -309,11 +336,15 @@ function createObstacle() {
     
     lastObstaclePosition = position.name;
     
+    // Adjust obstacle size for mobile
+    const obstacleWidth = isMobile ? BASE_OBSTACLE_WIDTH * 0.75 : BASE_OBSTACLE_WIDTH;
+    const obstacleHeight = isMobile ? BASE_OBSTACLE_HEIGHT * 0.75 : BASE_OBSTACLE_HEIGHT;
+    
     obstacles.push({
         x: BASE_CANVAS_WIDTH,
         y: finalY,
-        width: BASE_OBSTACLE_WIDTH,
-        height: BASE_OBSTACLE_HEIGHT,
+        width: obstacleWidth,
+        height: obstacleHeight,
         imageIndex: Math.floor(Math.random() * obstacleImages.length)
     });
     lastObstacleX = BASE_CANVAS_WIDTH;
@@ -379,12 +410,16 @@ class Particle {
 function update() {
     if (gameOver || isPaused) return;
 
+    const isMobile = window.innerWidth <= 768;
     // Calculate speed multiplier based on score with maximum limit
     const rawSpeedMultiplier = 1 + (Math.floor(score / 25) * 0.1);
     const speedMultiplier = Math.min(rawSpeedMultiplier, MAX_SPEED_MULTIPLIER);
-    const currentObstacleSpeed = BASE_OBSTACLE_SPEED * speedMultiplier;
-    const currentMovementSpeed = BASE_MOVEMENT_SPEED * speedMultiplier;
-    const currentDownwardSlideForce = BASE_DOWNWARD_SLIDE_FORCE * speedMultiplier;
+    
+    // Apply mobile speed reduction
+    const mobileSpeedFactor = isMobile ? 0.7 : 1; // 30% slower on mobile
+    const currentObstacleSpeed = BASE_OBSTACLE_SPEED * speedMultiplier * mobileSpeedFactor;
+    const currentMovementSpeed = BASE_MOVEMENT_SPEED * speedMultiplier * mobileSpeedFactor;
+    const currentDownwardSlideForce = BASE_DOWNWARD_SLIDE_FORCE * speedMultiplier * mobileSpeedFactor;
 
     // Calculate difficulty multiplier based on score with maximum limit
     const rawDifficultyMultiplier = 1 + (Math.floor(score / 40) * 0.15);
@@ -394,10 +429,11 @@ function update() {
 
     // Update player with more responsive upward movement
     if (player.isSliding) {
-        // Faster upward acceleration
-        player.velocityY = Math.max(player.velocityY - SMOOTH_ACCELERATION, SLIDE_FORCE);
+        // Slower upward acceleration on mobile
+        const slideForce = isMobile ? SLIDE_FORCE * 0.8 : SLIDE_FORCE;
+        player.velocityY = Math.max(player.velocityY - SMOOTH_ACCELERATION, slideForce);
         
-        // Quicker rotation for responsive feel (using previous values)
+        // Quicker rotation for responsive feel
         player.rotation = Math.max(player.rotation - UPWARD_ROTATION_SPEED, -UPWARD_MAX_ROTATION);
         
         // Continuous smoke generation while spacebar is pressed
@@ -407,8 +443,9 @@ function update() {
             }
         }
     } else {
-        // Increased falling speed with scaled downward slide force
-        player.velocityY = Math.min(player.velocityY + GRAVITY + currentDownwardSlideForce, 2.5 * speedMultiplier);
+        // Slower falling speed on mobile
+        const maxFallSpeed = isMobile ? 2.5 * speedMultiplier * 0.8 : 2.5 * speedMultiplier;
+        player.velocityY = Math.min(player.velocityY + GRAVITY + currentDownwardSlideForce, maxFallSpeed);
         
         // Add subtle rotation based on falling speed
         const fallSpeedRatio = Math.abs(player.velocityY) / (2.5 * speedMultiplier);
@@ -429,13 +466,16 @@ function update() {
         return particle.lifetime > 0;
     });
 
-    // Check boundaries with padding
-    if (player.y < CORNER_PADDING) {
-        player.y = CORNER_PADDING;
+    // Check boundaries with padding - adjust for mobile
+    const topPadding = isMobile ? CORNER_PADDING * 1.5 : CORNER_PADDING;
+    const bottomPadding = isMobile ? CORNER_PADDING * 1.5 : CORNER_PADDING;
+    
+    if (player.y < topPadding) {
+        player.y = topPadding;
         player.velocityY = 0;
     }
-    if (player.y > BASE_CANVAS_HEIGHT - player.height - CORNER_PADDING) {
-        player.y = BASE_CANVAS_HEIGHT - player.height - CORNER_PADDING;
+    if (player.y > BASE_CANVAS_HEIGHT - player.height - bottomPadding) {
+        player.y = BASE_CANVAS_HEIGHT - player.height - bottomPadding;
         player.velocityY = 0;
     }
 
@@ -482,6 +522,22 @@ function update() {
         validVehicles.forEach(vehicle => vehicle.unlocked = true);
         showToast('All vehicles unlocked!');
     }
+
+    // Update viewport to follow player on mobile
+    if (isMobile) {
+        // Calculate the desired viewport center - adjusted to show more of the left side
+        const targetX = player.x - BASE_CANVAS_WIDTH / 4; // Keep player in the left quarter of the screen
+        const targetY = player.y - BASE_CANVAS_HEIGHT / 2;
+        
+        // Smoothly move the viewport with faster follow speed
+        viewportOffset.x += (targetX - viewportOffset.x) * 0.2;
+        viewportOffset.y += (targetY - viewportOffset.y) * 0.2;
+        
+        // Clamp viewport to game boundaries with adjusted minimum X
+        const minX = -50; // Allow slight negative offset to ensure car visibility
+        viewportOffset.x = Math.max(minX, Math.min(viewportOffset.x, BASE_CANVAS_WIDTH - BASE_CANVAS_WIDTH));
+        viewportOffset.y = Math.max(0, Math.min(viewportOffset.y, BASE_CANVAS_HEIGHT - BASE_CANVAS_HEIGHT));
+    }
 }
 
 function draw() {
@@ -525,12 +581,18 @@ function draw() {
         return; // Exit draw function early
     }
 
-    // Draw particles
-    particles.forEach(particle => particle.draw(ctx));
+    // Draw particles with viewport offset
+    particles.forEach(particle => {
+        ctx.save();
+        ctx.translate(-viewportOffset.x, -viewportOffset.y);
+        particle.draw(ctx);
+        ctx.restore();
+    });
 
     // Draw player with rotation and error handling
     if (vehicleImg.complete && vehicleImg.naturalWidth !== 0) {
         ctx.save();
+        ctx.translate(-viewportOffset.x, -viewportOffset.y);
         ctx.translate(player.x + player.width/2, player.y + player.height/2);
         ctx.rotate(player.rotation * Math.PI / 180);
         
@@ -546,12 +608,17 @@ function draw() {
         
         ctx.restore();
     } else {
+        ctx.save();
+        ctx.translate(-viewportOffset.x, -viewportOffset.y);
         ctx.fillStyle = '#225D31';
         ctx.fillRect(player.x, player.y, player.width, player.height);
+        ctx.restore();
     }
 
-    // Draw obstacles with error handling
+    // Draw obstacles with error handling and viewport offset
     obstacles.forEach(obstacle => {
+        ctx.save();
+        ctx.translate(-viewportOffset.x, -viewportOffset.y);
         const img = obstacleImages[obstacle.imageIndex];
         if (img && img.complete && img.naturalWidth !== 0) {
             ctx.drawImage(img, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
@@ -559,15 +626,23 @@ function draw() {
             ctx.fillStyle = '#225D31';
             ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
         }
+        ctx.restore();
     });
 
     // Restore the context state
     ctx.restore();
 
-    // Draw score and other UI elements
-    ctx.font = '500 18px Quicksand';
+    // Draw score and other UI elements with mobile-specific positioning
+    const isMobile = window.innerWidth <= 768;
+    ctx.font = '500 14px Quicksand';
     ctx.fillStyle = '#225D31';
-    ctx.fillText(`Score: ${score}`, 20, 40);
+    
+    // Center score on mobile, keep original position on desktop
+    const scoreText = `Score: ${score}`;
+    const scoreMetrics = ctx.measureText(scoreText);
+    const scoreX = isMobile ? (BASE_CANVAS_WIDTH - scoreMetrics.width) / 2 : 20;
+    const scoreY = 24; // Set fixed 24px padding from top for both mobile and desktop
+    ctx.fillText(scoreText, scoreX, scoreY);
 
     // Draw game over with overlay
     if (gameOver) {
@@ -577,7 +652,7 @@ function draw() {
         
         // Draw game over text
         ctx.fillStyle = '#225D31';
-        ctx.font = '36px Neulis';
+        ctx.font = isMobile ? '28px Neulis' : '36px Neulis';
         const gameOverText = 'Game Over';
         const textMetrics = ctx.measureText(gameOverText);
         const x = (BASE_CANVAS_WIDTH - textMetrics.width) / 2;
@@ -586,8 +661,8 @@ function draw() {
 
         // Draw secondary text with specified styling
         ctx.fillStyle = '#225D31';
-        ctx.font = '500 18px Quicksand';
-        const secondaryText = 'hit the space bar to play again!';
+        ctx.font = isMobile ? '500 18px Quicksand' : '500 18px Quicksand';
+        const secondaryText = isMobile ? 'tap to play again!' : 'hit the space bar to play again!';
         const secondaryMetrics = ctx.measureText(secondaryText);
         const secondaryX = (BASE_CANVAS_WIDTH - secondaryMetrics.width) / 2;
         ctx.fillText(secondaryText, secondaryX, y + 40);
@@ -596,7 +671,7 @@ function draw() {
         document.getElementById('pauseButton').style.visibility = 'hidden';
         document.querySelector('.pick-ride-button').style.display = 'block';
         document.getElementById('playButton').style.display = 'block';
-        document.getElementById('playButton').textContent = 'Play Again'; // Change button text
+        document.getElementById('playButton').textContent = 'Play Again';
     } else {
         // Show pause button and hide pick ride button and play button when game is not over
         document.getElementById('pauseButton').style.visibility = 'visible';
@@ -631,14 +706,15 @@ function draw() {
 
 function resetGame() {
     player.y = BASE_CANVAS_HEIGHT / 2;
+    player.x = window.innerWidth <= 768 ? 300 : 150; // Reset to correct position based on device
     player.velocityY = 0;
     obstacles = [];
     score = 0;
     gameOver = false;
     isPaused = false;
-    showStartScreen = false; // Don't show start screen
+    showStartScreen = false;
     lastObstaclePosition = null;
-    particles = []; // Clear particles
+    particles = [];
     
     // Reset and show pause button
     const pauseButton = document.getElementById('pauseButton');

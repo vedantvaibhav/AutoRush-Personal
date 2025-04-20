@@ -209,11 +209,11 @@
         /* Mobile-specific styles */
         @media screen and (max-width: 768px) {
             body {
-                padding-top: 50px;
+                padding-top: 40px;
                 min-height: 100vh;
                 position: relative;
                 overflow-y: auto;
-                -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+                -webkit-overflow-scrolling: touch;
             }
 
             .mobile-wrapper {
@@ -221,25 +221,27 @@
                 flex-direction: column;
                 align-items: center;
                 min-height: 100vh;
-                padding-bottom: 100px; /* Space for controls */
+                padding-bottom: 100px;
                 box-sizing: border-box;
             }
 
             #gameContainer {
                 width: 90vw;
-                height: calc(90vw * 0.5556);
-                max-height: 60vh;
+                height: 500px;
+                max-height: none;
                 margin: 20px auto;
                 border-radius: 8px;
                 position: relative;
-                overflow: hidden; /* Prevent game content from scrolling */
+                overflow: hidden;
             }
 
             #gameCanvas {
                 width: 100%;
                 height: 100%;
                 border-radius: 8px;
-                touch-action: none; /* Prevent touch scrolling on canvas */
+                touch-action: none;
+                image-rendering: crisp-edges;
+                image-rendering: pixelated;
             }
 
             #touchArea {
@@ -250,7 +252,7 @@
                 height: 100%;
                 z-index: 50;
                 border-radius: 8px;
-                touch-action: none; /* Prevent touch scrolling on game area */
+                touch-action: none;
             }
 
             .title {

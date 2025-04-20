@@ -20,7 +20,7 @@ const UPWARD_MAX_ROTATION = 15;          // Previous upward maximum rotation
 
 // New settings
 const SLOPE_ANGLE = 15;                  // Keep current tilt angle
-const BASE_MOVEMENT_SPEED = 7;           // Base movement speed
+const BASE_MOVEMENT_SPEED =8;           // Base movement speed
 const TREE_GENERATION_INTERVAL = 10;    // Keep current tree generation interval
 
 // Vehicle-specific dimensions
@@ -154,22 +154,28 @@ function resizeCanvas() {
 
 // Event listeners
 function handleTouchStart(e) {
-    e.preventDefault();
-    if (showStartScreen) {
-        startGame();
-        return;
-    }
-    if (!gameOver && !isPaused) {
-        player.isSliding = true;
-    }
-    if (gameOver) {
-        resetGame();
+    // Only prevent default if touch is within game container
+    if (e.target.id === 'touchArea' || e.target.id === 'gameCanvas') {
+        e.preventDefault();
+        if (showStartScreen) {
+            startGame();
+            return;
+        }
+        if (!gameOver && !isPaused) {
+            player.isSliding = true;
+        }
+        if (gameOver) {
+            resetGame();
+        }
     }
 }
 
 function handleTouchEnd(e) {
-    e.preventDefault();
-    player.isSliding = false;
+    // Only prevent default if touch is within game container
+    if (e.target.id === 'touchArea' || e.target.id === 'gameCanvas') {
+        e.preventDefault();
+        player.isSliding = false;
+    }
 }
 
 // Add touch event listeners
@@ -192,9 +198,11 @@ touchArea.addEventListener('mouseup', (e) => {
     }
 });
 
-// Prevent default touch behaviors on the game container
+// Prevent default touch behaviors only within game container
 document.getElementById('gameContainer').addEventListener('touchmove', (e) => {
-    e.preventDefault();
+    if (e.target.id === 'touchArea' || e.target.id === 'gameCanvas') {
+        e.preventDefault();
+    }
 }, { passive: false });
 
 // Add keyboard controls for desktop

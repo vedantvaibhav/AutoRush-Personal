@@ -138,25 +138,20 @@ function resizeCanvas() {
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
     
-    // Calculate the scale factor while maintaining aspect ratio
-    const scaleX = containerWidth / BASE_CANVAS_WIDTH;
-    const scaleY = containerHeight / BASE_CANVAS_HEIGHT;
-    const scale = Math.min(scaleX, scaleY);
-    
-    // Set canvas size to match container while maintaining aspect ratio
-    canvas.width = BASE_CANVAS_WIDTH;
-    canvas.height = BASE_CANVAS_HEIGHT;
+    // Set canvas size to match container but with higher resolution for sharper rendering
+    canvas.width = BASE_CANVAS_WIDTH * 2;  // Double the resolution
+    canvas.height = BASE_CANVAS_HEIGHT * 2;
     
     // Scale the canvas display size
-    canvas.style.width = `${BASE_CANVAS_WIDTH * scale}px`;
-    canvas.style.height = `${BASE_CANVAS_HEIGHT * scale}px`;
+    canvas.style.width = `${containerWidth}px`;
+    canvas.style.height = `${containerHeight}px`;
     
     // Update scale for game calculations
-    scale = scale;
+    scale = containerWidth / BASE_CANVAS_WIDTH;
     
     // Scale the context to match the high resolution
     ctx.resetTransform();  // Reset any previous transforms
-    ctx.scale(1, 1);
+    ctx.scale(2, 2);
     
     // Reset image smoothing after resize
     ctx.imageSmoothingEnabled = true;
@@ -281,7 +276,6 @@ function togglePause() {
 
 // Handle window resize
 window.addEventListener('resize', resizeCanvas);
-window.addEventListener('orientationchange', resizeCanvas);
 resizeCanvas(); // Initial resize
 
 // Game functions

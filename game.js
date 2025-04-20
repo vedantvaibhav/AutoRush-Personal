@@ -1,22 +1,27 @@
 // Game constants
 const BASE_CANVAS_WIDTH = 900;
 const BASE_CANVAS_HEIGHT = 500;
-const GRAVITY = 0.2;                     // Keep current gravity
-const SLIDE_FORCE = -4.5;                // Keep current upward force
-const BASE_OBSTACLE_WIDTH = 60;          // Reduced obstacle width
-const BASE_OBSTACLE_HEIGHT = 70;         // Reduced obstacle height
-const OBSTACLE_SPEED = 3.5;              // Increased obstacle speed
-const OBSTACLE_GAP = 400;                // Keep current gap
-const MIN_OBSTACLE_DISTANCE = 300;       // Keep current distance
+const GRAVITY = 1;                     // Keep current gravity
+const SLIDE_FORCE = -10;                // Keep current upward force
+const BASE_DOWNWARD_SLIDE_FORCE = 0.5;  // Base downward slide force
+const BASE_OBSTACLE_WIDTH = 60;          // Keep current obstacle width
+const BASE_OBSTACLE_HEIGHT = 70;         // Keep current obstacle height
+const BASE_OBSTACLE_SPEED = 11;          // Base obstacle speed
+const BASE_OBSTACLE_GAP = 350;           // Base gap between obstacles
+const BASE_MIN_OBSTACLE_DISTANCE = 250;  // Base minimum distance
 const CORNER_PADDING = 40;
-const MAX_PARTICLES = 25;
+const MAX_PARTICLES = 150;
 const PARTICLE_LIFETIME = 40;
-const SMOOTH_ACCELERATION = 0.15;        // Keep current smooth acceleration
+const SMOOTH_ACCELERATION = 0.45;        // Keep current acceleration
+const MAX_ROTATION = 5;                  // Keep current maximum rotation angle
+const ROTATION_SPEED = 0.3;              // Keep current base rotation speed
+const UPWARD_ROTATION_SPEED = 0.8;       // Previous upward rotation speed
+const UPWARD_MAX_ROTATION = 15;          // Previous upward maximum rotation
 
 // New settings
-const SLOPE_ANGLE = 15;                  // Maximum tilt angle
-const MOVEMENT_SPEED = 1.0;              // Reduced base movement speed
-const TREE_GENERATION_INTERVAL = 120;    // Time between tree generation
+const SLOPE_ANGLE = 15;                  // Keep current tilt angle
+const BASE_MOVEMENT_SPEED = 7;           // Base movement speed
+const TREE_GENERATION_INTERVAL = 10;    // Keep current tree generation interval
 
 // Vehicle-specific dimensions
 const VEHICLE_DIMENSIONS = {
@@ -150,23 +155,47 @@ function resizeCanvas() {
 // Event listeners
 function handleTouchStart(e) {
     e.preventDefault();
+    if (showStartScreen) {
+        startGame();
+        return;
+    }
     if (!gameOver && !isPaused) {
         player.isSliding = true;
+    }
+    if (gameOver) {
+        resetGame();
     }
 }
 
 function handleTouchEnd(e) {
     e.preventDefault();
     player.isSliding = false;
-    if (gameOver) {
-        resetGame();
-    }
 }
 
 // Add touch event listeners
 touchArea.addEventListener('touchstart', handleTouchStart, { passive: false });
 touchArea.addEventListener('touchend', handleTouchEnd, { passive: false });
 touchArea.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+// Add click/tap listeners for non-touch devices and better responsiveness
+touchArea.addEventListener('mousedown', (e) => {
+    // Only handle mouse events if not a touch device
+    if (!('ontouchstart' in window)) {
+        handleTouchStart(e);
+    }
+});
+
+touchArea.addEventListener('mouseup', (e) => {
+    // Only handle mouse events if not a touch device
+    if (!('ontouchstart' in window)) {
+        handleTouchEnd(e);
+    }
+});
+
+// Prevent default touch behaviors on the game container
+document.getElementById('gameContainer').addEventListener('touchmove', (e) => {
+    e.preventDefault();
+}, { passive: false });
 
 // Add keyboard controls for desktop
 document.addEventListener('keydown', (e) => {
@@ -237,6 +266,9 @@ resizeCanvas(); // Initial resize
 
 // Game functions
 function createObstacle() {
+    // Calculate randomness multiplier based on score
+    const randomnessMultiplier = 1 + (Math.floor(score / 30) * 0.2);
+    
     // Create obstacles in different positions with better vertical spacing
     const positions = [
         { y: CORNER_PADDING, name: 'top' },
@@ -250,12 +282,22 @@ function createObstacle() {
         availablePositions = positions.filter(pos => pos.name !== lastObstaclePosition);
     }
     
+    // Add random variation to position
     const position = availablePositions[Math.floor(Math.random() * availablePositions.length)];
+    const randomYVariation = (Math.random() - 0.5) * 50 * randomnessMultiplier;
+    const finalY = Math.max(
+        CORNER_PADDING,
+        Math.min(
+            BASE_CANVAS_HEIGHT - CORNER_PADDING - BASE_OBSTACLE_HEIGHT,
+            position.y + randomYVariation
+        )
+    );
+    
     lastObstaclePosition = position.name;
     
     obstacles.push({
         x: BASE_CANVAS_WIDTH,
-        y: position.y,
+        y: finalY,
         width: BASE_OBSTACLE_WIDTH,
         height: BASE_OBSTACLE_HEIGHT,
         imageIndex: Math.floor(Math.random() * obstacleImages.length)
@@ -271,7 +313,7 @@ class Particle {
         this.height = Math.random() * 8 + 6;
         this.lifetime = PARTICLE_LIFETIME;
         this.speedY = (Math.random() - 0.5) * 1.5;
-        this.speedX = -OBSTACLE_SPEED * 0.4;
+        this.speedX = -BASE_OBSTACLE_SPEED * 0.4;
         this.opacity = Math.random() * 0.3 + 0.1;
         this.color = `rgba(34, 93, 49, ${this.opacity})`;
         this.rotation = Math.random() * Math.PI;
@@ -323,13 +365,24 @@ class Particle {
 function update() {
     if (gameOver || isPaused) return;
 
+    // Calculate speed multiplier based on score
+    const speedMultiplier = 1 + (Math.floor(score / 25) * 0.1);
+    const currentObstacleSpeed = BASE_OBSTACLE_SPEED * speedMultiplier;
+    const currentMovementSpeed = BASE_MOVEMENT_SPEED * speedMultiplier;
+    const currentDownwardSlideForce = BASE_DOWNWARD_SLIDE_FORCE * speedMultiplier;
+
+    // Calculate difficulty multiplier based on score
+    const difficultyMultiplier = 1 + (Math.floor(score / 40) * 0.15);
+    const currentObstacleGap = BASE_OBSTACLE_GAP / difficultyMultiplier;
+    const currentMinDistance = BASE_MIN_OBSTACLE_DISTANCE * difficultyMultiplier;
+
     // Update player with more responsive upward movement
     if (player.isSliding) {
         // Faster upward acceleration
         player.velocityY = Math.max(player.velocityY - SMOOTH_ACCELERATION, SLIDE_FORCE);
         
-        // Quicker rotation for responsive feel
-        player.rotation = Math.max(player.rotation - 0.8, -15);
+        // Quicker rotation for responsive feel (using previous values)
+        player.rotation = Math.max(player.rotation - UPWARD_ROTATION_SPEED, -UPWARD_MAX_ROTATION);
         
         // Continuous smoke generation while spacebar is pressed
         if (particles.length < MAX_PARTICLES) {
@@ -338,9 +391,13 @@ function update() {
             }
         }
     } else {
-        // Keep current falling speed
-        player.velocityY = Math.min(player.velocityY + GRAVITY, 1.8);
-        player.rotation = Math.min(player.rotation + 0.6, 0);
+        // Increased falling speed with scaled downward slide force
+        player.velocityY = Math.min(player.velocityY + GRAVITY + currentDownwardSlideForce, 2.5 * speedMultiplier);
+        
+        // Add subtle rotation based on falling speed
+        const fallSpeedRatio = Math.abs(player.velocityY) / (2.5 * speedMultiplier);
+        const targetRotation = MAX_ROTATION * fallSpeedRatio;
+        player.rotation = Math.min(player.rotation + ROTATION_SPEED * fallSpeedRatio, targetRotation);
         
         // Minimal smoke when falling
         if (particles.length < MAX_PARTICLES && Math.random() > 0.9) {
@@ -366,16 +423,16 @@ function update() {
         player.velocityY = 0;
     }
 
-    // Update obstacles
+    // Update obstacles with current speed
     for (let i = obstacles.length - 1; i >= 0; i--) {
-        obstacles[i].x -= OBSTACLE_SPEED;
+        obstacles[i].x -= currentObstacleSpeed;
 
         // Check collision with improved hitbox
         if (
-            player.x + player.width * 0.8 > obstacles[i].x &&  // Reduced hitbox width
-            player.x + player.width * 0.2 < obstacles[i].x + obstacles[i].width &&  // Reduced hitbox width
-            player.y + player.height * 0.8 > obstacles[i].y &&  // Reduced hitbox height
-            player.y + player.height * 0.2 < obstacles[i].y + obstacles[i].height  // Reduced hitbox height
+            player.x + player.width * 0.8 > obstacles[i].x &&
+            player.x + player.width * 0.2 < obstacles[i].x + obstacles[i].width &&
+            player.y + player.height * 0.8 > obstacles[i].y &&
+            player.y + player.height * 0.2 < obstacles[i].y + obstacles[i].height
         ) {
             gameOver = true;
             if (score > personalBest) {
@@ -392,10 +449,13 @@ function update() {
         }
     }
 
-    // Generate new obstacles with better spacing
+    // Generate new obstacles with current spacing and randomness
     const lastObstacle = obstacles[obstacles.length - 1];
+    const randomnessMultiplier = 1 + (Math.floor(score / 30) * 0.2);
+    const randomDistance = Math.random() * 100 * randomnessMultiplier;
+    
     if (!lastObstacle || 
-        (BASE_CANVAS_WIDTH - (lastObstacle.x + lastObstacle.width) >= MIN_OBSTACLE_DISTANCE)) {
+        (BASE_CANVAS_WIDTH - (lastObstacle.x + lastObstacle.width) >= currentMinDistance + randomDistance)) {
         createObstacle();
     }
 

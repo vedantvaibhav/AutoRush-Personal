@@ -209,27 +209,33 @@
         /* Mobile-specific styles */
         @media screen and (max-width: 768px) {
             body {
-                padding-top: 40px;
+                padding-top: 0;
                 min-height: 100vh;
                 position: relative;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
 
             .mobile-wrapper {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                justify-content: center;
                 min-height: 100vh;
-                padding-bottom: 100px;
+                width: 100%;
+                padding: 20px 0;
                 box-sizing: border-box;
+                gap: 20px;
             }
 
             #gameContainer {
                 width: 90vw;
                 height: 500px;
                 max-height: none;
-                margin: 20px auto;
+                margin: 0 auto;
                 border-radius: 8px;
                 position: relative;
                 overflow: hidden;

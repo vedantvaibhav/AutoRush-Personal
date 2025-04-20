@@ -107,7 +107,7 @@ for (let i = 1; i <= 4; i++) {
 
 // Game state
 let player = {
-    x: window.innerWidth <= 768 ? 300 : 30, // 300 for mobile, 150 for desktop
+    x: window.innerWidth <= 768 ? 270 : 35, // 300 for mobile, 150 for desktop
     y: BASE_CANVAS_HEIGHT / 2,
     velocityY: 0,
     width: VEHICLE_DIMENSIONS[selectedVehicle].width,

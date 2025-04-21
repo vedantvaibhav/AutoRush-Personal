@@ -570,7 +570,7 @@ function draw() {
         // Draw secondary text
         ctx.fillStyle = '#225D31';
         ctx.font = '500 18px Quicksand';
-        const secondaryText = 'press space to start';
+        const secondaryText = window.innerWidth <= 768 ? 'tap to play' : 'press space to start';
         const secondaryMetrics = ctx.measureText(secondaryText);
         const secondaryX = (BASE_CANVAS_WIDTH - secondaryMetrics.width) / 2;
         ctx.fillText(secondaryText, secondaryX, y + 40);

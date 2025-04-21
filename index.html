@@ -8,8 +8,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Neulis&display=swap" rel="stylesheet">
     <style>
+        @font-face {
+            font-family: 'Neulis';
+            src: url('fonts/Neulis-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
         body {
             margin: 0;
             padding: 0;
@@ -228,7 +234,7 @@
                 width: 100%;
                 padding: 20px 0;
                 box-sizing: border-box;
-                gap: 20px;
+                gap: 4px;
             }
 
             #gameContainer {
@@ -351,7 +357,7 @@
             }
 
             .pick-ride-button {
-                order: 2;
+                order: 1;
                 text-decoration: none;
                 color: #225D31;
                 background: transparent;
@@ -360,7 +366,7 @@
             }
 
             #playButton {
-                order: 1;
+                order: 2;
             }
 
             #pauseButton {
@@ -379,7 +385,7 @@
 <body>
     <div class="mobile-wrapper">
         <h1 class="title">Auto Rush</h1>
-        <p class="subtitle">click the space bar to move up/start the game</p>
+        <p class="subtitle" id="subtitleText">tap on game canvas to move up/start the game</p>
         <div id="gameContainer">
             <canvas id="gameCanvas"></canvas>
             <div id="touchArea"></div>

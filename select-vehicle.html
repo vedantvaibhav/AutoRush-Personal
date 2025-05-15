@@ -302,7 +302,7 @@
 
             // Create and load image with error handling
             const img = new Image();
-            img.src = `assets/${encodeURIComponent(vehicle.id)}.svg`;
+            img.src = `assets/${encodeURIComponent(vehicle.id)}${vehicle.id === 'Auto 1' ? '.png' : '.svg'}`;
             img.alt = vehicle.name;
             img.onerror = function() {
                 console.error('Failed to load vehicle image:', vehicle.id);

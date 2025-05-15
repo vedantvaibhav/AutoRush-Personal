@@ -78,13 +78,13 @@ document.getElementById('personalBest').textContent = personalBest;
 
 // Create vehicle image with error handling
 const vehicleImg = new Image();
-vehicleImg.src = `assets/${selectedVehicle}.svg`;
+vehicleImg.src = `assets/${selectedVehicle}${selectedVehicle === 'Auto 1' ? '.png' : '.svg'}`;
 vehicleImg.onerror = function() {
     console.error('Failed to load vehicle image:', vehicleImg.src);
     if (selectedVehicle !== 'Auto 1') {
         selectedVehicle = 'Auto 1';
         localStorage.setItem('selectedVehicle', selectedVehicle);
-        vehicleImg.src = `assets/${selectedVehicle}.svg`;
+        vehicleImg.src = `assets/${selectedVehicle}.png`;
     }
 };
 vehicleImg.onload = function() {
